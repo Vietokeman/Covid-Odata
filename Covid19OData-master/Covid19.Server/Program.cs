@@ -42,7 +42,7 @@ namespace Covid19.Server
             {
                 options.AddPolicy("AllowReactApp",policy =>
                 {
-                    policy.WithOrigins("https://localhost:54956")
+                    policy.AllowAnyOrigin()
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
@@ -78,29 +78,6 @@ namespace Covid19.Server
             app.MapControllers();
 
             app.MapFallbackToFile("/index.html");
-
-            // Seed data nếu cần
-            Task.Run(async () =>
-            {
-                using (var scope = app.Services.CreateScope())
-                {
-                    var services = scope.ServiceProvider;
-                    var context = services.GetRequiredService<ApplicationDbContext>();
-                    var confirmService = services.GetRequiredService<CovidConfirmService>();
-                    var deathService = services.GetRequiredService<CovidDeathService>();
-                    var recoverService = services.GetRequiredService<CovidRecoverService>();
-
-                    // Kiểm tra nếu DB trống thì seed
-                    if (!await context.CovidConfirmedCases.AnyAsync())
-                    {
-                        Console.WriteLine("Seeding data from CSV...");
-                        await confirmService.SeedDataFromCsvAsync();
-                        await deathService.SeedDataFromCsvAsync();
-                        await recoverService.SeedDataFromCsvAsync();
-                        Console.WriteLine("Data seeded successfully.");
-                    }
-                }
-            });
 
             app.Run();
         }

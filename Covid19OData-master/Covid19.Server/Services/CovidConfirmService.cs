@@ -19,7 +19,7 @@ namespace Covid19.Server.Services
 
         public async Task<IEnumerable<CovidConfirmedCase>> GetConfirmedCasesAsync()
         {
-            return await _context.CovidConfirmedCases.ToListAsync();
+            return await _context.CovidConfirmedCases.AsNoTracking().ToListAsync();
         }
 
         public async Task SeedDataFromCsvAsync()

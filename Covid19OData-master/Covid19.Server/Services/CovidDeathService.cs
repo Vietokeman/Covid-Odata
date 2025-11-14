@@ -18,7 +18,7 @@ namespace Covid19.Server.Services
 
         public async Task<IEnumerable<CovidDeathCase>> GetDeathServicesAsync()
         {
-            return await _context.CovidDeathCases.ToListAsync();
+            return await _context.CovidDeathCases.AsNoTracking().ToListAsync();
         }
 
         public async Task SeedDataFromCsvAsync()

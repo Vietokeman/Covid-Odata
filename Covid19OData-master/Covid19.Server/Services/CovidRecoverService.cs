@@ -17,7 +17,7 @@ namespace Covid19.Server.Services
 
         public async Task<IEnumerable<CovidRecoverCase>> GetRecoverCasesAsync()
         {
-            return await _context.CovidRecoverCases.ToListAsync();
+            return await _context.CovidRecoverCases.AsNoTracking().ToListAsync();
         }
 
         public async Task SeedDataFromCsvAsync()

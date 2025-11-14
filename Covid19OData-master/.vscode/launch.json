@@ -1,0 +1,49 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Server",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Covid19.Server/bin/Debug/net8.0/Covid19.Server.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Covid19.Server",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            },
+            "serverReadyAction": {
+                "pattern": "Now listening on: (https?://\\S+)",
+                "uriFormat": "%s/swagger",
+                "action": "openExternally"
+            }
+        },
+        {
+            "name": "Run Client",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/covid19.client/node_modules/.bin/vite",
+            "args": ["--host"],
+            "cwd": "${workspaceFolder}/covid19.client",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "serverReadyAction": {
+                "pattern": "Local:\\s+(https?://\\S+)",
+                "uriFormat": "%s",
+                "action": "openExternally"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run Both Server and Client",
+            "configurations": ["Run Server", "Run Client"],
+            "stopAll": true
+        }
+    ]
+}

@@ -33,7 +33,7 @@ function App() {
 
             let allData: CovidData[] = [];
             let nextUrl: string | null =
-                "https://localhost:7049/odata/CovidData?$orderby=Date desc";
+                "http://localhost:5274/odata/CovidData?$orderby=Date desc";
             let pageCount = 0;
 
             while (nextUrl) {
