@@ -1,0 +1,394 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+}
+
+#root {
+    width: 100%;
+    min-height: 100vh;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.app-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.header p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  margin: 0 0 20px 0;
+}
+
+/* Metric Selector */
+.metric-selector {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+  flex-wrap: wrap;
+}
+
+.metric-selector button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  color: white;
+  min-width: 140px;
+  justify-content: center;
+}
+
+/* Confirmed */
+.metric-selector button.confirmed {
+  background: #3498db;
+}
+.metric-selector button.confirmed:hover {
+  background: #2980b9;
+}
+
+/* Deaths */
+.metric-selector button.deaths {
+  background: #e74c3c;
+}
+.metric-selector button.deaths:hover {
+  background: #c0392b;
+}
+
+/* Recovered */
+.metric-selector button.recovered {
+  background: #2ecc71;
+}
+.metric-selector button.recovered:hover {
+  background: #27ae60;
+}
+
+/* Active state */
+.metric-selector button.active {
+  box-shadow: 0 0 12px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+  font-size: 1rem;
+  font-weight: 700;
+  border: 2px solid rgba(0,0,0,0.1);
+}
+
+
+/* Map */
+.map-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.map-wrapper {
+  position: relative;
+  padding: 20px;
+}
+
+/* Legend */
+.legend {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  min-width: 150px;
+  backdrop-filter: blur(10px);
+}
+
+.legend-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+}
+
+.legend-color {
+  width: 20px;
+  height: 15px;
+  margin-right: 8px;
+  border-radius: 2px;
+  border: 1px solid #ddd;
+}
+
+.legend-note {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
+
+.legend-note small {
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  color: black;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  color: #2c3e50;
+}
+
+
+.stat-item {
+  text-align: center;
+  padding: 10px;
+}
+
+.stat-item strong {
+  display: block;
+  color: #2c3e50;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+/* Tooltip */
+.tooltip {
+  position: fixed;
+  background: rgba(44, 62, 80, 0.95);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  max-width: 250px;
+  white-space: pre-line;
+  line-height: 1.4;
+}
+
+/* Loading & Error */
+.loading, .error {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
+  color: #7f8c8d;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.error button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.error button:hover {
+  background: #2980b9;
+}
+
+/* Treemap */
+/* Fixed Treemap CSS - Eliminates shaking */
+.treemap-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.treemap-header {
+  padding: 20px 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.treemap-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.treemap-wrapper {
+  padding: 30px;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+}
+
+.treemap-chart {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* FIXED: Remove all animations and transforms that cause shaking */
+.treemap-cell-fixed {
+  cursor: pointer;
+  /* NO transitions or transforms */
+}
+
+.treemap-cell-fixed:hover {
+  /* Only use filter effects, no transforms */
+  /* Hover effects are handled inline in React code */
+}
+
+/* Remove any global Recharts animation classes that might interfere */
+.recharts-wrapper .recharts-surface {
+  /* Prevent any unexpected transformations */
+}
+
+/* Ensure text doesn't cause layout shifts */
+.treemap-cell-fixed text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* No transitions on text */
+}
+
+/* Optional: If you still see shaking, add this to force stable positioning */
+.recharts-treemap {
+  /* Force hardware acceleration without transforms */
+  will-change: auto;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.recharts-treemap-depth-1 {
+  /* Disable any built-in Recharts animations */
+  transition: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .treemap-wrapper {
+    padding: 20px;
+  }
+  
+  .treemap-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 10px;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .legend {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .metric-selector {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .metric-selector button,
+  .metric-selector select {
+    width: 200px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  /* Treemap responsive */
+  .treemap-container {
+    margin: 20px auto;
+  }
+
+  .treemap-header {
+    padding: 15px 20px;
+  }
+
+  .treemap-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .treemap-wrapper {
+    padding: 20px 10px;
+  }
+
+  .treemap-chart {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .treemap-header h2 {
+    font-size: 1.2rem;
+    line-height: 1.3;
+  }
+
+  .treemap-wrapper {
+    padding: 15px 5px;
+  }
+}
