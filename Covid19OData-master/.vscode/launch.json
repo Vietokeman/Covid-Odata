@@ -12,7 +12,8 @@
             "console": "internalConsole",
             "stopAtEntry": false,
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5274"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"

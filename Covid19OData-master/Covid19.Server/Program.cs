@@ -28,8 +28,8 @@ namespace Covid19.Server
                     .OrderBy()
                     .Count()
                     .Expand()
-                    .AddRouteComponents("odata", modelBuilder.GetEdmModel())
-            );
+                    .SetMaxTop(1000000)
+                    .AddRouteComponents("odata", modelBuilder.GetEdmModel()));
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

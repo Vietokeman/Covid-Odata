@@ -30,19 +30,17 @@ function App() {
         try {
             setLoading(true);
             setError(null);
+            console.log("🔵 Starting fetch...");
 
             let allData: CovidData[] = [];
             let nextUrl: string | null =
-                "http://localhost:5274/odata/CovidData?$orderby=Date desc";
+                "https://localhost:7049/odata/CovidData?$orderby=Date desc&$top=1000000";
             let pageCount = 0;
 
             while (nextUrl) {
-                setLoadingProgress(
-                    `Fetching page ${pageCount + 1}... (${allData.length} records so far)`
-                );
-
                 try {
                     const response: Response = await fetch(nextUrl);
+
                     if (!response.ok)
                         throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -50,26 +48,29 @@ function App() {
                     const pageData = json.value || [];
 
                     if (pageData.length === 0) {
-                        console.log(`No more data on page ${pageCount + 1}, stopping fetch.`);
                         break;
                     }
 
-                    allData = allData.concat(pageData);
+                    // Process data in chunks of 10,000
+                    let processedInThisResponse = 0;
+                    while (processedInThisResponse < pageData.length) {
+                        const chunkEnd = Math.min(processedInThisResponse + 10000, pageData.length);
+                        const chunk = pageData.slice(processedInThisResponse, chunkEnd);
+                        allData = allData.concat(chunk);
+                        processedInThisResponse = chunkEnd;
+                        pageCount++;
+
+                        // Update progress display for every 10,000 rows
+                        setLoadingProgress(`⏳ Loading page ${pageCount}... Total: ${allData.length.toLocaleString()} rows`);
+
+                        // Small delay so user can see the progress
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    }
+
                     nextUrl = json["@odata.nextLink"] || null;
-                    pageCount++;
-
-                    if (nextUrl) {
-                        await new Promise((resolve) => setTimeout(resolve, 100));
-                    }
-
-                    if (pageCount % 10 === 0) {
-                        console.log(`Loaded ${pageCount} pages, ${allData.length} total records`);
-                    }
 
                 } catch (pageError) {
-                    console.error(`Error fetching page ${pageCount + 1}:`, pageError);
-                    // You can decide whether to break or continue on individual page errors
-                    // For now, we'll break to avoid infinite loops on persistent errors
+                    console.error(`Error fetching:`, pageError);
                     break;
                 }
             }
@@ -232,13 +233,18 @@ function App() {
         return (
             <div className="app-container">
                 <div className="loading">
-                    <div>Loading COVID-19 data...</div>
+                    <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>Loading COVID-19 data...</div>
                     {loadingProgress && (
                         <div
                             style={{
-                                marginTop: "10px",
-                                fontSize: "0.9rem",
-                                color: "#7f8c8d",
+                                marginTop: "20px",
+                                fontSize: "1rem",
+                                color: "#2c3e50",
+                                fontWeight: "500",
+                                padding: "15px",
+                                backgroundColor: "#ecf0f1",
+                                borderRadius: "8px",
+                                minWidth: "300px",
                             }}
                         >
                             {loadingProgress}
