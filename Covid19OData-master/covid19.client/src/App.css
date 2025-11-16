@@ -12,14 +12,14 @@ body {
 #root {
     width: 100%;
     min-height: 100vh;
-    padding: 20px;
+    padding: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .app-container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: transparent;
   min-height: 100vh;
 }
 
@@ -27,13 +27,94 @@ body {
 .header {
   text-align: center;
   margin-bottom: 30px;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .header h1 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-size: 2.5rem;
-  font-weight: 600;
+  color: white;
+  margin-bottom: 20px;
+  font-size: 2.8rem;
+  font-weight: 700;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.summary {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.summary-item {
+  text-align: center;
+  padding: 20px 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+.summary-item:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+.summary-item.confirmed {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.95), rgba(41, 128, 185, 0.95));
+  color: white;
+}
+
+.summary-item.deaths {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.95), rgba(192, 57, 43, 0.95));
+  color: white;
+}
+
+.summary-item.recovered {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.95), rgba(39, 174, 96, 0.95));
+  color: white;
+}
+
+.summary-item .label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  opacity: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-item .value {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .header p {
@@ -49,10 +130,11 @@ body {
   gap: 15px;
   margin-top: 25px;
   flex-wrap: wrap;
+  animation: fadeIn 0.8s ease-out 0.4s both;
 }
 
 .metric-selector button {
-  padding: 12px 24px;
+  padding: 14px 28px;
   border: none;
   border-radius: 30px;
   cursor: pointer;
@@ -61,54 +143,87 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: white;
-  min-width: 140px;
+  min-width: 150px;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-selector button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left 0.5s;
+}
+
+.metric-selector button:hover::before {
+  left: 100%;
 }
 
 /* Confirmed */
 .metric-selector button.confirmed {
-  background: #3498db;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 .metric-selector button.confirmed:hover {
-  background: #2980b9;
+  background: linear-gradient(135deg, #2980b9, #1f6391);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
 
 /* Deaths */
 .metric-selector button.deaths {
-  background: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
 }
 .metric-selector button.deaths:hover {
-  background: #c0392b;
+  background: linear-gradient(135deg, #c0392b, #a02a1f);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
 /* Recovered */
 .metric-selector button.recovered {
-  background: #2ecc71;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
 }
 .metric-selector button.recovered:hover {
-  background: #27ae60;
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
 }
 
 /* Active state */
 .metric-selector button.active {
-  box-shadow: 0 0 12px rgba(0,0,0,0.2);
-  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0 6px 20px rgba(0,0,0,0.25);
+  transform: translateY(-3px) scale(1.05);
   font-size: 1rem;
   font-weight: 700;
-  border: 2px solid rgba(0,0,0,0.1);
+  border: 3px solid rgba(255, 255, 255, 0.3);
 }
 
 
 /* Map */
 .map-container {
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto 30px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  animation: fadeIn 0.8s ease-out 0.6s both;
+  transition: transform 0.3s ease;
+}
+
+.map-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
 
 .map-wrapper {
@@ -196,75 +311,160 @@ body {
 /* Tooltip */
 .tooltip {
   position: fixed;
-  background: rgba(44, 62, 80, 0.95);
+  background: linear-gradient(135deg, rgba(44, 62, 80, 0.98), rgba(52, 73, 94, 0.98));
   color: white;
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 0.9rem;
   font-weight: 500;
   pointer-events: none;
   z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  max-width: 250px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  max-width: 280px;
   white-space: pre-line;
-  line-height: 1.4;
+  line-height: 1.5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Loading & Error */
-.loading, .error {
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top: 5px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-progress {
+  margin-top: 20px;
+  padding: 20px 30px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #2c3e50;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  min-width: 300px;
   text-align: center;
-  padding: 50px;
-  font-size: 1.2rem;
-  color: #7f8c8d;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
 }
 
 .error {
-  color: #e74c3c;
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
+  color: white;
+  background: rgba(231, 76, 60, 0.9);
+  border-radius: 12px;
+  max-width: 600px;
+  margin: 50px auto;
+  box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
 }
 
 .error button {
-  background: #3498db;
-  color: white;
+  background: white;
+  color: #e74c3c;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 20px;
+  transition: all 0.3s ease;
 }
 
 .error button:hover {
-  background: #2980b9;
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Treemap */
-/* Fixed Treemap CSS - Eliminates shaking */
+/* Professional Treemap Styling */
 .treemap-container {
   max-width: 1200px;
-  margin: 40px auto;
+  margin: 0 auto 30px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  animation: fadeIn 0.8s ease-out 0.8s both;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.treemap-container:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 .treemap-header {
-  padding: 20px 30px;
+  padding: 30px 35px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.treemap-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
 }
 
 .treemap-header h2 {
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-size: 2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.5px;
 }
 
 .treemap-wrapper {
-  padding: 30px;
-  background: #f8f9fa;
+  padding: 35px;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -273,44 +473,56 @@ body {
 
 .treemap-chart {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   overflow: hidden;
+  transition: transform 0.3s ease;
+  border: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.treemap-chart:hover {
+  transform: scale(1.005);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* FIXED: Remove all animations and transforms that cause shaking */
 .treemap-cell-fixed {
   cursor: pointer;
-  /* NO transitions or transforms */
+  transition: none !important;
 }
 
-.treemap-cell-fixed:hover {
-  /* Only use filter effects, no transforms */
-  /* Hover effects are handled inline in React code */
+.treemap-cell-fixed rect {
+  transition: filter 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease !important;
 }
 
-/* Remove any global Recharts animation classes that might interfere */
-.recharts-wrapper .recharts-surface {
-  /* Prevent any unexpected transformations */
-}
-
-/* Ensure text doesn't cause layout shifts */
 .treemap-cell-fixed text {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  /* No transitions on text */
+  transition: none !important;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-/* Optional: If you still see shaking, add this to force stable positioning */
+/* Ensure stable positioning */
 .recharts-treemap {
-  /* Force hardware acceleration without transforms */
   will-change: auto;
   backface-visibility: hidden;
   transform: translateZ(0);
 }
 
 .recharts-treemap-depth-1 {
-  /* Disable any built-in Recharts animations */
   transition: none !important;
+}
+
+/* Add subtle animation on load only */
+@keyframes cellAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Responsive adjustments */
@@ -328,7 +540,7 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .app-container {
-    padding: 10px;
+    padding: 15px;
   }
 
   .header h1 {
@@ -347,12 +559,13 @@ body {
   .metric-selector {
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
 
   .metric-selector button,
   .metric-selector select {
-    width: 200px;
+    width: 100%;
+    max-width: 250px;
   }
 
   .stats {
@@ -380,9 +593,30 @@ body {
     width: 100%;
     max-width: 100%;
   }
+
+  .summary {
+    gap: 15px;
+  }
+
+  .summary-item {
+    min-width: 140px;
+    padding: 15px 20px;
+  }
+
+  .summary-item .value {
+    font-size: 1.4rem;
+  }
+
+  .map-container, .treemap-container {
+    margin-bottom: 20px;
+  }
 }
 
 @media (max-width: 480px) {
+  .header h1 {
+    font-size: 1.6rem;
+  }
+
   .treemap-header h2 {
     font-size: 1.2rem;
     line-height: 1.3;
@@ -391,4 +625,42 @@ body {
   .treemap-wrapper {
     padding: 15px 5px;
   }
+
+  .summary-item {
+    min-width: 120px;
+    padding: 12px 18px;
+  }
+
+  .summary-item .label {
+    font-size: 0.8rem;
+  }
+
+  .summary-item .value {
+    font-size: 1.2rem;
+  }
+
+  .metric-selector button {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  padding: 25px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+  color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.8s ease-out 1s both;
+}
+
+.footer p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.95;
 }

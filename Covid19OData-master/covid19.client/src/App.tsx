@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import {
     ComposableMap,
     Geographies,
     Geography,
 } from "react-simple-maps";
 import { scaleLinear } from "d3-scale";
-import { Treemap, Tooltip as ReTooltip } from "recharts";
+import { Treemap } from "recharts";
 import "./App.css";
 import type { CovidData, CountryData } from "./covid.ts";
 
@@ -13,6 +13,7 @@ const geoUrl = "map.json";
 
 function App() {
     const [data, setData] = useState<CountryData[]>([]);
+    const [rawData, setRawData] = useState<CountryData[]>([]); // Cache raw data
     const [loading, setLoading] = useState(true);
     const [loadingProgress, setLoadingProgress] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
@@ -25,6 +26,12 @@ function App() {
         content: string;
     } | null>(null);
     const [hoveredCell, setHoveredCell] = useState<string | null>(null);
+    const [totals, setTotals] = useState({
+        Confirmed: 0,
+        Deaths: 0,
+        Recovered: 0,
+        LastUpdate: ""
+    });
 
     const fetchData = useCallback(async () => {
         try {
@@ -98,9 +105,23 @@ function App() {
             });
 
             const mapped = Object.values(latestByCountry).sort(
-                (a, b) => b[selectedMetric] - a[selectedMetric]
+                (a, b) => b.Confirmed - a.Confirmed // Sort by Confirmed initially
             );
+            setRawData(mapped); // Cache the raw data
             setData(mapped);
+
+            // Calculate totals
+            const totalConfirmed = mapped.reduce((sum, d) => sum + d.Confirmed, 0);
+            const totalDeaths = mapped.reduce((sum, d) => sum + d.Deaths, 0);
+            const totalRecovered = mapped.reduce((sum, d) => sum + d.Recovered, 0);
+            const lastUpdate = mapped.length > 0 ? mapped[0].LastUpdate : "";
+
+            setTotals({
+                Confirmed: totalConfirmed,
+                Deaths: totalDeaths,
+                Recovered: totalRecovered,
+                LastUpdate: lastUpdate
+            });
 
             console.log(`Final result: ${mapped.length} countries processed`);
 
@@ -111,13 +132,23 @@ function App() {
             setLoading(false);
             setLoadingProgress("");
         }
-    }, [selectedMetric]);
+    }, []); // Empty dependency - only fetch once!
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    const getColorScale = () => {
+    // Re-sort data when metric changes without refetching
+    useEffect(() => {
+        if (rawData.length > 0) {
+            const sorted = [...rawData].sort(
+                (a, b) => b[selectedMetric] - a[selectedMetric]
+            );
+            setData(sorted);
+        }
+    }, [selectedMetric, rawData]);
+
+    const colorScale = useMemo(() => {
         if (data.length === 0)
             return scaleLinear<string>().domain([0, 1]).range(["#f7f7f7", "#f7f7f7"]);
 
@@ -135,12 +166,10 @@ function App() {
                 Math.log10(maxCases),
             ])
             .range(["#f7f7f7", "#fee5d9", "#fcae91", "#fb6a4a", "#cb181d"]);
-    };
+    }, [data, selectedMetric]);
+    const formatNumber = useCallback((num: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num), []);
 
-    const colorScale = getColorScale();
-    const formatNumber = (num: number) => new Intl.NumberFormat().format(num);
-
-    const findCountryData = (geoName: string): CountryData | undefined => {
+    const findCountryData = useCallback((geoName: string): CountryData | undefined => {
         let countryData = data.find((d) => d.CountryRegion === geoName);
         if (!countryData) {
             const nameMapping: Record<string, string> = {
@@ -168,9 +197,9 @@ function App() {
             }
         }
         return countryData;
-    };
+    }, [data]);
 
-    const handleMouseEnter = (event: React.MouseEvent, geo: any) => {
+    const handleMouseEnter = useCallback((event: React.MouseEvent, geo: { properties: { name: string } }) => {
         const countryData = findCountryData(geo.properties.name);
         const value = countryData ? countryData[selectedMetric] : 0;
         const lastUpdate = countryData
@@ -184,37 +213,45 @@ function App() {
                 value
             )} ${selectedMetric} (${lastUpdate})`,
         });
-    };
-    const handleMouseLeave = () => setTooltip(null);
+    }, [findCountryData, selectedMetric, formatNumber]);
+    const handleMouseLeave = useCallback(() => setTooltip(null), []);
 
-    const handleTreemapCellEnter = (event: React.MouseEvent, name: string, size: number) => {
+    const handleTreemapCellEnter = useCallback((event: React.MouseEvent, name: string, size: number) => {
         setHoveredCell(name);
         setTooltip({
             x: event.clientX,
             y: event.clientY,
             content: `${name}: ${formatNumber(size)} ${selectedMetric}`,
         });
-    };
+    }, [formatNumber, selectedMetric]);
 
-    const handleTreemapCellLeave = () => {
+    const handleTreemapCellLeave = useCallback(() => {
         setHoveredCell(null);
         setTooltip(null);
-    };
+    }, []);
 
-    const treemapData = data.map((d) => ({
-        name: d.CountryRegion,
-        size: d[selectedMetric],
-    }));
+    // Top 50 countries optimized for treemap layout to fill completely
+    const treemapData = useMemo(() => {
+        const top50 = data.slice(0, 50);
+        // Ensure minimum size for small countries to avoid hidden cells
+        const minSize = Math.max(...top50.map(d => d[selectedMetric])) * 0.01;
+        return top50.map((d) => ({
+            name: d.CountryRegion,
+            size: Math.max(d[selectedMetric], minSize),
+        }));
+    }, [data, selectedMetric]);
 
-    // Responsive treemap dimensions
+    // Responsive treemap dimensions - optimized for top 50 full fill
     const getTreemapDimensions = () => {
         const width = window.innerWidth;
         if (width <= 480) {
-            return { width: width - 40, height: 300 };
+            return { width: width - 30, height: 450 };
         } else if (width <= 768) {
-            return { width: width - 60, height: 400 };
+            return { width: width - 50, height: 550 };
+        } else if (width <= 1024) {
+            return { width: width - 80, height: 650 };
         } else {
-            return { width: 1000, height: 500 };
+            return { width: 1250, height: 750 };
         }
     };
 
@@ -233,20 +270,10 @@ function App() {
         return (
             <div className="app-container">
                 <div className="loading">
-                    <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>Loading COVID-19 data...</div>
+                    <div className="loading-spinner"></div>
+                    <div style={{ fontSize: "1.4rem", fontWeight: "bold", marginTop: "20px" }}>Loading COVID-19 Data...</div>
                     {loadingProgress && (
-                        <div
-                            style={{
-                                marginTop: "20px",
-                                fontSize: "1rem",
-                                color: "#2c3e50",
-                                fontWeight: "500",
-                                padding: "15px",
-                                backgroundColor: "#ecf0f1",
-                                borderRadius: "8px",
-                                minWidth: "300px",
-                            }}
-                        >
+                        <div className="loading-progress">
                             {loadingProgress}
                         </div>
                     )}
@@ -270,7 +297,21 @@ function App() {
     return (
         <div className="app-container">
             <div className="header">
-                <h1>COVID-19 Global Cases</h1>
+                <h1>🌍 COVID-19 Global Dashboard</h1>
+                <div className="summary">
+                    <div className="summary-item confirmed">
+                        <span className="label">Total Confirmed</span>
+                        <span className="value">{formatNumber(totals.Confirmed)}</span>
+                    </div>
+                    <div className="summary-item deaths">
+                        <span className="label">Total Deaths</span>
+                        <span className="value">{formatNumber(totals.Deaths)}</span>
+                    </div>
+                    <div className="summary-item recovered">
+                        <span className="label">Total Recovered</span>
+                        <span className="value">{formatNumber(totals.Recovered)}</span>
+                    </div>
+                </div>
                 <div className="metric-selector">
                     <button
                         className={`confirmed ${selectedMetric === "Confirmed" ? "active" : ""
@@ -344,7 +385,7 @@ function App() {
             <div className="treemap-container">
                 <div className="treemap-header">
                     <h2>
-                        COVID-19 {selectedMetric} by Country ({data.length} countries)
+                        🏆 Top 50 Countries - {selectedMetric} Cases
                     </h2>
                 </div>
                 <div className="treemap-wrapper">
@@ -356,31 +397,44 @@ function App() {
                             dataKey="size"
                             stroke="#fff"
                             fill="#82ca9d"
-                            // Add these props to stabilize the treemap
                             animationBegin={0}
                             animationDuration={0}
                             isAnimationActive={false}
-                            content={({ x, y, width, height, name, size, payload }) => {
+                            content={({ x, y, width, height, name, size }) => {
                                 if (width <= 60 || height <= 30) return <g></g>;
 
                                 // Calculate opacity based on size for better visual hierarchy
                                 const maxSize = Math.max(...treemapData.map(d => d.size));
-                                const opacity = 0.7 + (size / maxSize) * 0.3;
+                                const opacity = 0.75 + (size / maxSize) * 0.25;
 
                                 // Dynamic font size based on cell size and screen size
                                 const baseFontSize = treemapDimensions.width <= 480 ? 10 : treemapDimensions.width <= 768 ? 12 : 14;
                                 const fontSize = Math.min(width / 8, height / 4, baseFontSize);
-                                const smallFont = fontSize * 0.8;
+                                const smallFont = fontSize * 0.85;
 
-                                // Color scheme - using fixed colors to prevent flickering
-                                const colors = {
-                                    Confirmed: `rgba(52, 152, 219, ${opacity})`,
-                                    Deaths: `rgba(231, 76, 60, ${opacity})`,
-                                    Recovered: `rgba(46, 204, 113, ${opacity})`
+                                // Professional color scheme with depth
+                                const colorSchemes = {
+                                    Confirmed: {
+                                        primary: 'rgb(52, 152, 219)',
+                                        secondary: 'rgb(41, 128, 185)',
+                                        accent: 'rgba(52, 152, 219, 0.2)'
+                                    },
+                                    Deaths: {
+                                        primary: 'rgb(231, 76, 60)',
+                                        secondary: 'rgb(192, 57, 43)',
+                                        accent: 'rgba(231, 76, 60, 0.2)'
+                                    },
+                                    Recovered: {
+                                        primary: 'rgb(46, 204, 113)',
+                                        secondary: 'rgb(39, 174, 96)',
+                                        accent: 'rgba(46, 204, 113, 0.2)'
+                                    }
                                 };
 
-                                // Create unique gradient ID to prevent conflicts
-                                const gradientId = `gradient-${name}-${x}-${y}`.replace(/[^a-zA-Z0-9-]/g, '');
+                                const scheme = colorSchemes[selectedMetric];
+
+                                // Create unique gradient ID
+                                const gradientId = `grad-${name?.replace(/[^a-zA-Z0-9]/g, '')}-${selectedMetric}`;
                                 const isHovered = hoveredCell === name;
 
                                 return (
@@ -392,9 +446,12 @@ function App() {
                                     >
                                         <defs>
                                             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                                                <stop offset="0%" stopColor={colors[selectedMetric]} />
-                                                <stop offset="100%" stopColor={colors[selectedMetric].replace(opacity.toString(), (opacity * 0.8).toString())} />
+                                                <stop offset="0%" stopColor={scheme.primary} stopOpacity={opacity} />
+                                                <stop offset="100%" stopColor={scheme.secondary} stopOpacity={opacity * 0.9} />
                                             </linearGradient>
+                                            <filter id={`shadow-${gradientId}`}>
+                                                <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3" />
+                                            </filter>
                                         </defs>
                                         <rect
                                             x={x}
@@ -402,14 +459,15 @@ function App() {
                                             width={width}
                                             height={height}
                                             fill={`url(#${gradientId})`}
-                                            stroke={isHovered ? "#2c3e50" : "#fff"}
-                                            strokeWidth={isHovered ? 3 : 2}
-                                            rx={4}
-                                            ry={4}
+                                            stroke={isHovered ? "#2c3e50" : "rgba(255, 255, 255, 0.9)"}
+                                            strokeWidth={isHovered ? 3 : 2.5}
+                                            rx={6}
+                                            ry={6}
                                             style={{
-                                                filter: isHovered ? 'brightness(1.1)' : 'none'
+                                                filter: isHovered ? `brightness(1.15) url(#shadow-${gradientId})` : 'none',
                                             }}
                                         />
+                                        {/* Country Name */}
                                         <text
                                             x={x + width / 2}
                                             y={y + height / 2 - fontSize / 2}
@@ -418,21 +476,23 @@ function App() {
                                             fontSize={fontSize}
                                             fontWeight={isHovered ? "700" : "600"}
                                             style={{
-                                                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-                                                pointerEvents: 'none'
+                                                textShadow: '0 2px 6px rgba(0, 0, 0, 0.7)',
+                                                pointerEvents: 'none',
+                                                letterSpacing: '0.3px'
                                             }}
                                         >
                                             {name}
                                         </text>
+                                        {/* Case Count */}
                                         <text
                                             x={x + width / 2}
-                                            y={y + height / 2 + fontSize / 2}
+                                            y={y + height / 2 + fontSize / 2 + 2}
                                             textAnchor="middle"
-                                            fill="rgba(255, 255, 255, 0.9)"
+                                            fill="rgba(255, 255, 255, 0.95)"
                                             fontSize={smallFont}
                                             fontWeight={isHovered ? "600" : "500"}
                                             style={{
-                                                textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                                                textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
                                                 pointerEvents: 'none'
                                             }}
                                         >
@@ -456,6 +516,11 @@ function App() {
                     {tooltip.content}
                 </div>
             )}
+
+            {/* Footer */}
+            <footer className="footer">
+                <p>Last updated: {totals.LastUpdate ? new Date(totals.LastUpdate).toLocaleDateString() : "N/A"} | Data source: COVID-19 API</p>
+            </footer>
         </div>
     );
 }
